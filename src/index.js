@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import {db} from './db/index.js';
+import { users } from './db/schema.js';
 
 //creates the express application
 const app = express(); 
@@ -14,6 +16,16 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
     res.json({ message: 'WeatherWise API is running'});
+});
+
+app.get('/test-db', async (req, res) => {
+    try {
+        const allUsers = await db.select().from(users);
+        res.json({ success: true, userCount:allUsers.length, users: allUsers}); 
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 //Starts the backend server and makes it listen for requests on the specified PORT.
