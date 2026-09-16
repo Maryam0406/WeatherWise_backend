@@ -23,7 +23,7 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    // Hash the password before storing it — never store plaintext
+    // Hash the password before storing it 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [newUser] = await db
