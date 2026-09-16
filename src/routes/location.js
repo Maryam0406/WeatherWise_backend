@@ -21,3 +21,31 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch saved locations.' });
     }
 });
+
+//post api locations - create a new saved location
+router.post('/', async (req, res) => {
+    try {
+        const { label , cityName, latitude, longitude } = req.body;
+
+
+        if (!label || !cityName || !latitude || !longitude) {
+            return res.status(400).json({ error: 'label, city name, latitude, and longitude are required.' });
+        }
+        
+        const [newLocation] = await db
+            .insert(savedLocations)
+            .values({
+                userId: req.user.id,
+                label,
+                cityName,
+                latitude: String(latitude),
+                longitude: String(longitude),
+            })
+            .returning();
+
+        res.status(201).json(newLocation);    
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to create location.' });
+    }
+});
