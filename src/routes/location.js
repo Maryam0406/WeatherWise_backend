@@ -82,3 +82,33 @@ router.put('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to update location.' });
     }
 });
+
+//DELETE api - delete but restricts if trips reference it
+router.delete('/', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [existing] = await db
+            .select()
+            .from(savedLocations)
+            .where(and(eq(savedLocations.id, Number(id)), eq(savedLocation.userId, req.user.id)));
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Location not found' });
+        } 
+
+        //check if any trips reference this location
+        const linkedTrips = await db.select().from(trips).where(eq(trips.locationId, Number(id)));
+        if (linkedTrips > 0) {
+            return res.status(404).json({ error: "Cant delete this location - it's linked to one or more existing trips." });
+        } 
+
+        await db.delete(savedLocations).where(eq(savedLocations.id, Number(id)));
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete location.' });
+    }
+});
+
+export default router;
