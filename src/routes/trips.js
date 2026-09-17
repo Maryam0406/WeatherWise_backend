@@ -23,3 +23,21 @@ router.get('/', async (req, res) => {
     }
 });
 
+//get api trips/:id - get a specific trip by id with packing items and activities
+router.get('/:id', async (req, res) => {
+    try {
+        const trip = await db.query.trips.findFirst({
+            where: and(eq(trips.id, Number(req.params.id)), eq(trips.userId, req.user.id)),
+            with: { packingItems: true, activities: true, location: true},
+        });
+
+        if (!trip) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+        res.json(trip);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch trip' });
+    }
+});
+
