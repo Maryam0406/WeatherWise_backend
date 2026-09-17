@@ -49,3 +49,36 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to create location.' });
     }
 });
+
+//put api locations - update a saved location
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { label, cityName, latitude, longitude } = req.body;
+
+        const [existing] = await db
+            .select()
+            .from(savedLocations)
+            .where(and(eq(savedLocations.id, Number(id)), eq(savedLocations.userId, req.user.id)));
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Location not found'});
+        }  
+        
+        const [updated] = await db
+            .update(savedLocations)
+            .set({
+                label: label?? existing.label,
+                cityName: cityName?? existing.cityName,
+                latitude: latitude ? String(latitude) : existing.latitude,
+                longitude: longitude ? String(longitude) : existing.longitude
+            })
+            .where(eq(savedLocations.id, Number(id))) 
+            .returning();
+
+        res.json(updated);      
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update location.' });
+    }
+});
