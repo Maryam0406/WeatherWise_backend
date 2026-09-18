@@ -126,3 +126,27 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+//delete api trips
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [ existing ] = await db
+            .select()
+            .from(trips)
+            .where(and(eq(trips.id, Number(id)), eq(trips.userId, req.user.id)));
+
+        if (!existing) {
+            return res.status(500).json({ error: 'Trip not found' });
+        }  
+        
+        await db.delete(trips).where(eq(trips.id, Number(id)));
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete trip' });
+    }
+});
+
+export default router;
+
