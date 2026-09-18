@@ -93,3 +93,36 @@ router.post('/', async ( req, res) => {
     }
 });
 
+//put api - update trip details
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, startDate, endDate , notes } = req. body;
+
+        const [ existing ] = await db
+            .select()
+            .from(trips)
+            .where(and(eq(trips.id, Number(id)), eq(trips.userId, req.user.id)));
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+
+        const [updated] = await db
+            .update(trips)
+            .set({
+                name: name ?? existing.name,
+                startDate: startDate ?? existing.startDate,
+                endDate: endDate ?? existing.endDate,
+                notes: notes ?? existing.notes,
+            })
+            .where(eq(trips.id, Number(id)))
+            .returning();
+            
+        res.json(updated);        
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update trip' });
+    }
+});
+
