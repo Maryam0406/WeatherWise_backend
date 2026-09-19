@@ -84,14 +84,14 @@ router.put('/:id', async (req, res) => {
 });
 
 //DELETE api - delete but restricts if trips reference it
-router.delete('/', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
         const [existing] = await db
             .select()
             .from(savedLocations)
-            .where(and(eq(savedLocations.id, Number(id)), eq(savedLocation.userId, req.user.id)));
+            .where(and(eq(savedLocations.id, Number(id)), eq(savedLocations.userId, req.user.id)));
 
         if (!existing) {
             return res.status(404).json({ error: 'Location not found' });
@@ -99,8 +99,8 @@ router.delete('/', async (req, res) => {
 
         //check if any trips reference this location
         const linkedTrips = await db.select().from(trips).where(eq(trips.locationId, Number(id)));
-        if (linkedTrips > 0) {
-            return res.status(404).json({ error: "Cant delete this location - it's linked to one or more existing trips." });
+        if (linkedTrips.length > 0) {
+            return res.status(409).json({ error: "Cant delete this location - it's linked to one or more existing trips." });
         }
 
         await db.delete(savedLocations).where(eq(savedLocations.id, Number(id)));

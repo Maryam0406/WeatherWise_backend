@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
             );
         }
 
-        const fullTrip = await db.query.findFirst({
+        const fullTrip = await db.query.trips.findFirst({
             where: eq(trips.id, newTrip.id),
             with: { packingItems: true, activities: true },
         });
