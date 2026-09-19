@@ -1,9 +1,9 @@
-import {Router} from 'express';
-import {db} from '../db/index.js';
-import {trips, packingItems, activities} from '../db/schema.js';
-import {eq,and} from 'drizzle-orm';
-import {requireAuth} from '../middleware/auth.js';
-import {generatePackingItems} from '..utils/packingEngine.js';
+import { Router } from 'express';
+import { db } from '../db/index.js';
+import { trips, packingItems, activities } from '../db/schema.js';
+import { eq, and } from 'drizzle-orm';
+import { requireAuth } from '../middleware/auth.js';
+import { generatePackingSuggestions } from '../utils/packingEngine.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     try {
         const userTrips = await db.query.trips.findMany({
             where: eq(trips.userId, req.user.id),
-            with: { packingItems: true, activities: true},
+            with: { packingItems: true, activities: true },
         });
 
         res.json(userTrips);
@@ -28,7 +28,7 @@ router.get('/:id', async (req, res) => {
     try {
         const trip = await db.query.trips.findFirst({
             where: and(eq(trips.id, Number(req.params.id)), eq(trips.userId, req.user.id)),
-            with: { packingItems: true, activities: true, location: true},
+            with: { packingItems: true, activities: true, location: true },
         });
 
         if (!trip) {
@@ -42,16 +42,16 @@ router.get('/:id', async (req, res) => {
 });
 
 //POST api trips - create a trip + auto generate packing suggestions
-router.post('/', async ( req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { name, locationId, startDate, endDate, notes } = req.body;
 
         if (!name || !locationId || !startDate || !endDate) {
-            return res.status(400).json({ error: 'name, locationId, startDate, and endDate are required'});
+            return res.status(400).json({ error: 'name, locationId, startDate, and endDate are required' });
         }
-        
+
         if (endDate < startDate) {
-            return res.status(400).json({ error: 'endDate must be on or after startDate'});
+            return res.status(400).json({ error: 'endDate must be on or after startDate' });
         }
 
         const [newTrip] = await db
@@ -97,9 +97,9 @@ router.post('/', async ( req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, startDate, endDate , notes } = req. body;
+        const { name, startDate, endDate, notes } = req.body;
 
-        const [ existing ] = await db
+        const [existing] = await db
             .select()
             .from(trips)
             .where(and(eq(trips.id, Number(id)), eq(trips.userId, req.user.id)));
@@ -118,8 +118,8 @@ router.put('/:id', async (req, res) => {
             })
             .where(eq(trips.id, Number(id)))
             .returning();
-            
-        res.json(updated);        
+
+        res.json(updated);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to update trip' });
@@ -131,15 +131,15 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const [ existing ] = await db
+        const [existing] = await db
             .select()
             .from(trips)
             .where(and(eq(trips.id, Number(id)), eq(trips.userId, req.user.id)));
 
         if (!existing) {
             return res.status(500).json({ error: 'Trip not found' });
-        }  
-        
+        }
+
         await db.delete(trips).where(eq(trips.id, Number(id)));
         res.status(204).send();
     } catch (err) {

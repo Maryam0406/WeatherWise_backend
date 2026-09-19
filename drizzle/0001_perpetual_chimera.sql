@@ -1,0 +1,1 @@
+ALTER TABLE "users" RENAME COLUMN "passowrd_hash" TO "password_hash";

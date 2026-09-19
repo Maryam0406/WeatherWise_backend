@@ -8,6 +8,13 @@
       "when": 1788002404178,
       "tag": "0000_volatile_zuras",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789777368892,
+      "tag": "0001_perpetual_chimera",
+      "breakpoints": true
     }
   ]
 }

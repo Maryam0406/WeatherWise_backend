@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db/index.js';
+import { db } from '../db/index.js';
 import { savedLocations, trips } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
@@ -25,13 +25,13 @@ router.get('/', async (req, res) => {
 //post api locations - create a new saved location
 router.post('/', async (req, res) => {
     try {
-        const { label , cityName, latitude, longitude } = req.body;
+        const { label, cityName, latitude, longitude } = req.body;
 
 
         if (!label || !cityName || !latitude || !longitude) {
             return res.status(400).json({ error: 'label, city name, latitude, and longitude are required.' });
         }
-        
+
         const [newLocation] = await db
             .insert(savedLocations)
             .values({
@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
             })
             .returning();
 
-        res.status(201).json(newLocation);    
+        res.status(201).json(newLocation);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to create location.' });
@@ -62,21 +62,21 @@ router.put('/:id', async (req, res) => {
             .where(and(eq(savedLocations.id, Number(id)), eq(savedLocations.userId, req.user.id)));
 
         if (!existing) {
-            return res.status(404).json({ error: 'Location not found'});
-        }  
-        
+            return res.status(404).json({ error: 'Location not found' });
+        }
+
         const [updated] = await db
             .update(savedLocations)
             .set({
-                label: label?? existing.label,
-                cityName: cityName?? existing.cityName,
+                label: label ?? existing.label,
+                cityName: cityName ?? existing.cityName,
                 latitude: latitude ? String(latitude) : existing.latitude,
                 longitude: longitude ? String(longitude) : existing.longitude
             })
-            .where(eq(savedLocations.id, Number(id))) 
+            .where(eq(savedLocations.id, Number(id)))
             .returning();
 
-        res.json(updated);      
+        res.json(updated);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to update location.' });
@@ -95,13 +95,13 @@ router.delete('/', async (req, res) => {
 
         if (!existing) {
             return res.status(404).json({ error: 'Location not found' });
-        } 
+        }
 
         //check if any trips reference this location
         const linkedTrips = await db.select().from(trips).where(eq(trips.locationId, Number(id)));
         if (linkedTrips > 0) {
             return res.status(404).json({ error: "Cant delete this location - it's linked to one or more existing trips." });
-        } 
+        }
 
         await db.delete(savedLocations).where(eq(savedLocations.id, Number(id)));
         res.status(204).send();
