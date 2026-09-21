@@ -55,3 +55,23 @@ router.post('/:tripId', async (req, res) => {
     }
 });
 
+// DELETE /api/activities/:id
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const existing = await findOwnedActivity(Number(id), req.user.id);
+        if (!existing) {
+            return res.status(404).json({ error: 'Activity not found.' });
+        }
+
+        await db.delete(activities).where(eq(activities.id, Number(id)));
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete activity.' });
+    }
+});
+
+export default router;
+
