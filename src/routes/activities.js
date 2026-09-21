@@ -20,3 +20,38 @@ async function findOwnedActivity(activityId, userId) {
     return activity;
 }
 
+// POST /api/activities/:tripId — add a new activity to a trip
+router.post('/:tripId', async (req, res) => {
+    try {
+        const { tripId } = req.params;
+        const { activityName, scheduledDate } = req.body;
+
+        if (!activityName || !scheduledDate) {
+            return res.status(400).json({ error: 'activityName and scheduledDate are required.' });
+        }
+
+        const [trip] = await db
+            .select()
+            .from(trips)
+            .where(and(eq(trips.id, Number(tripId)), eq(trips.userId, req.user.id)));
+
+        if (!trip) {
+            return res.status(404).json({ error: 'Trip not found.' });
+        }
+
+        const [newActivity] = await db
+            .insert(activities)
+            .values({
+                tripId: Number(tripId),
+                activityName,
+                scheduledDate: new Date(scheduledDate),
+            })
+            .returning();
+
+        res.status(201).json(newActivity);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to add activity.' });
+    }
+});
+
