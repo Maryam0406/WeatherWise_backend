@@ -6,6 +6,7 @@ import { users } from './db/schema.js';
 import authRoutes from './routes/auth.js';
 import locationRoutes from './routes/location.js';
 import tripRoutes from './routes/trips.js';
+import packingItemRoutes from './routes/packingItems.js';
 
 //creates the express application
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/packing-items', packingItemRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'WeatherWise API is running' });
