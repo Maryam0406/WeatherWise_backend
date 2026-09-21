@@ -53,3 +53,50 @@ router.post('/:tripId', async (req, res) => {
         res.status(500).json({ error: 'Failed to add packing item' });
     }
 });
+
+//put api packing items - update a packing item
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isPacked, itemName } = req.body;
+
+        const existing = await findOwnedItem(Number(id), req.user.id);
+        if (!existing) {
+            return res.status(404).json({ error: 'Packing item not found' });
+        }
+
+        const [updated] = await db
+            .update(packingItems)
+            .set({
+                idPacked: isPacked ?? existing.isPacked,
+                itemName: itemName ?? existing.itemName,
+            })
+            .where(eq(oackingItems.id, Number(id)))
+            .returning();
+
+        res.json(updated);
+    } catch (err) {
+        console.error(err);
+        res.json(500).json({ error: 'Failed to update packing item' });
+    }
+});
+
+//Delete - packing items
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const existing = await findOwnedItem(Number(id), req.user.id);
+        if (!existing) {
+            return res.status(404), json({ error: 'Packing item not found' });
+        }
+
+        await db.delete(packingItems).where(eq(packingItems.id, Number(id)));
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete packing item' });
+    }
+});
+
+export default router;
