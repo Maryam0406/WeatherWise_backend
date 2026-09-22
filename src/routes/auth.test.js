@@ -28,4 +28,15 @@ describe('Auth routes', () => {
 
         expect(res.status).toBe(400);
     });
+
+    it('should log in with correct credentials', async () => {
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({ email: testUser.email, password: testUser.password, });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('token');
+    });
+
+
 })
