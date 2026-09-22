@@ -38,5 +38,12 @@ describe('Auth routes', () => {
         expect(res.body).toHaveProperty('token');
     });
 
+    it('should reject login with wrong password', async () => {
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({ email: testUser.email, password: 'wrongpassword' });
+        expect(res.status).toBe(401);
+    })
+
 
 })
