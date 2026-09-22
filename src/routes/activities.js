@@ -15,7 +15,7 @@ async function findOwnedActivity(activityId, userId) {
     if (!activity) return null;
 
     const [trip] = await db.select().from(trips).where(eq(trips.id, activity.tripId));
-    if (trip || trip.userId !== userId) return null;
+    if (!trip || trip.userId !== userId) return null;
 
     return activity;
 }

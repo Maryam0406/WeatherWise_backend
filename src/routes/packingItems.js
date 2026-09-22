@@ -4,11 +4,9 @@ import { packingItems, trips } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 
-//creates a new express router
 const router = Router();
 router.use(requireAuth);
 
-//confirm that a packing item belongs ( via trips ) to the logged in user
 async function findOwnedItem(itemId, userId) {
     const [item] = await db.select().from(packingItems).where(eq(packingItems.id, itemId));
     if (!item) return null;
@@ -17,13 +15,11 @@ async function findOwnedItem(itemId, userId) {
     if (!trip || trip.userId !== userId) return null;
 
     return item;
-
 }
 
-//Post api packing items - add a new item to a trip
 router.post('/:tripId', async (req, res) => {
     try {
-        const { id } = req.params;
+        const { tripId } = req.params;
         const { itemName } = req.body;
 
         if (!itemName) {
@@ -33,7 +29,7 @@ router.post('/:tripId', async (req, res) => {
         const [trip] = await db
             .select()
             .from(trips)
-            .where(and(eq(trips.id, Number(id)), eq(trips.userId, req.user.id)));
+            .where(and(eq(trips.id, Number(tripId)), eq(trips.userId, req.user.id)));
 
         if (!trip) {
             return res.status(404).json({ error: 'Trip not found' });
@@ -48,13 +44,14 @@ router.post('/:tripId', async (req, res) => {
                 isSuggested: false,
             })
             .returning();
+
+        res.status(201).json(newItem);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to add packing item' });
     }
 });
 
-//put api packing items - update a packing item
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -68,27 +65,26 @@ router.put('/:id', async (req, res) => {
         const [updated] = await db
             .update(packingItems)
             .set({
-                idPacked: isPacked ?? existing.isPacked,
+                isPacked: isPacked ?? existing.isPacked,
                 itemName: itemName ?? existing.itemName,
             })
-            .where(eq(oackingItems.id, Number(id)))
+            .where(eq(packingItems.id, Number(id)))
             .returning();
 
         res.json(updated);
     } catch (err) {
         console.error(err);
-        res.json(500).json({ error: 'Failed to update packing item' });
+        res.status(500).json({ error: 'Failed to update packing item' });
     }
 });
 
-//Delete - packing items
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
         const existing = await findOwnedItem(Number(id), req.user.id);
         if (!existing) {
-            return res.status(404), json({ error: 'Packing item not found' });
+            return res.status(404).json({ error: 'Packing item not found' });
         }
 
         await db.delete(packingItems).where(eq(packingItems.id, Number(id)));
