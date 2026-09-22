@@ -43,7 +43,13 @@ describe('Auth routes', () => {
             .post('/api/auth/login')
             .send({ email: testUser.email, password: 'wrongpassword' });
         expect(res.status).toBe(401);
-    })
+    });
 
+    it('should reject creating a location without a token', async () => {
+        const res = await request(app)
+            .post('/api/locations')
+            .send({ label: 'Test', cityName: 'Test City', latitude: 1, longitude: 1, });
 
-})
+        expect(res.status).toBe(401);
+    });
+});
