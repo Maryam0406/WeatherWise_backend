@@ -39,3 +39,4 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
+export default app;
